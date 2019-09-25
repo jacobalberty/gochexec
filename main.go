@@ -14,13 +14,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	_, err := os.Stat(os.Args[1])
+	path := os.Args[1]
+	command := os.Args[2]
+	params := os.Args[3:]
+
+	_, err := os.Stat(path)
 	if err != nil {
 		fmt.Println("Could not access specified path.")
 		os.Exit(1)
 	}
-	fmt.Println(os.Args[3:])
-	cmd := exec.Command(os.Args[2], os.Args[3:]...)
+
+	cmd := exec.Command(command, params...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 
 	err = cmd.Run()
 
