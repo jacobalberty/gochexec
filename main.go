@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 )
+
+var errorList []error
 
 func main() {
 
@@ -18,21 +21,42 @@ func main() {
 	command := os.Args[2]
 	params := os.Args[3:]
 
-	_, err := os.Stat(path)
-	if err != nil {
-		fmt.Println("Could not access specified path.")
-		os.Exit(1)
-	}
+	defer waitCont()
 
+	if !checkPath(path) {
+		errorList = append(errorList, errors.New("Could not access specified path"))
+		return
+	}
 	cmd := exec.Command(command, params...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	err = cmd.Run()
+	err := cmd.Run()
 
 	if err != nil {
-		fmt.Println(err)
+		errorList = append(errorList, err)
 	}
+}
+
+func waitCont() {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			fmt.Println(err)
+		}
+		fmt.Println("Press the Enter Key to terminate the console screen!")
+		var input string
+		fmt.Scanln(&input)
+		os.Exit(1)
+	}
+}
+
+func checkPath(path string) (ret bool) {
+	ret = true
+	_, err := os.Stat(path)
+	if err != nil {
+		ret = false
+	}
+	return
 }
