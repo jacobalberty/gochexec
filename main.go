@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 var errorList []error
@@ -23,17 +26,40 @@ func main() {
 
 	defer waitCont()
 
-	if !checkPath(path) {
+	stat, err := os.Stat(path)
+
+	if err != nil {
 		errorList = append(errorList, errors.New("Could not access specified path"))
 		return
 	}
+
+	if !stat.IsDir() && filepath.Ext(path) == ".csv" {
+		fileR, _ := os.Open(path)
+		csvR := csv.NewReader(fileR)
+		for {
+			record, err := csvR.Read()
+			if err == io.EOF {
+				break
+			}
+			switch record[0] {
+			case "file":
+				if !checkPath(record[1]) {
+					errorList = append(errorList, errors.New(fmt.Sprintf("Could not access path: %s", record[1])))
+				}
+			}
+		}
+		if len(errorList) > 0 {
+			return
+		}
+	}
+
 	cmd := exec.Command(command, params...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
 		errorList = append(errorList, err)
