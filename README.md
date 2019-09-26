@@ -6,7 +6,7 @@ You can add this to for example a windows short cut to ensure network resources 
 
 
 ## Usage
-gochexec.exe <path> <command> (arguments)
+gochexec.exe &lt;path&gt; &lt;command&gt; (arguments)
 
 ### CSV
 
