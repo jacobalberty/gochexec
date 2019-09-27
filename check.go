@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -47,7 +46,7 @@ func (c *check) Path(path string) bool {
 			switch record[0] {
 			case "file":
 				if !c.Path(record[1]) {
-					c.ErrorList = append(c.ErrorList, errors.New(fmt.Sprintf("Could not validate path: '%s' from '%s'", record[1], path)))
+					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not validate path: '%s' from '%s'", record[1], path))
 				}
 			}
 		}
