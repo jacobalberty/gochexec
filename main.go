@@ -1,56 +1,37 @@
 package main
 
 import (
-	"encoding/csv"
 	"errors"
+	"flag"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
-var errorList []error
-
 func main() {
+	c := check{}
+	c.init()
 
-	if len(os.Args) < 3 {
+	flag.BoolVar(&c.NoCSV, "nocsv", false, "turn off CSV processing")
+	flag.Parse()
+
+	fArgs := flag.Args()
+
+	if len(fArgs) < 2 {
 		fmt.Println("Not enough arguments supplied")
 		fmt.Printf("Expected: %s <path> <executable>\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	path := os.Args[1]
-	command := os.Args[2]
-	params := os.Args[3:]
+	path := fArgs[0]
+	command := fArgs[1]
+	params := fArgs[2:]
 
-	defer waitCont()
+	defer c.ShowErrors()
 
-	stat, err := os.Stat(path)
-
-	if err != nil {
-		errorList = append(errorList, errors.New("Could not access specified path"))
+	if !c.Path(path) {
+		c.ErrorList = append(c.ErrorList, errors.New("Could not validate specified path"))
 		return
-	}
-
-	if !stat.IsDir() && filepath.Ext(path) == ".csv" {
-		fileR, _ := os.Open(path)
-		csvR := csv.NewReader(fileR)
-		for {
-			record, err := csvR.Read()
-			if err == io.EOF {
-				break
-			}
-			switch record[0] {
-			case "file":
-				if !checkPath(record[1]) {
-					errorList = append(errorList, errors.New(fmt.Sprintf("Could not access path: %s", record[1])))
-				}
-			}
-		}
-		if len(errorList) > 0 {
-			return
-		}
 	}
 
 	cmd := exec.Command(command, params...)
@@ -59,30 +40,9 @@ func main() {
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	err = cmd.Run()
+	err := cmd.Run()
 
 	if err != nil {
-		errorList = append(errorList, err)
+		c.ErrorList = append(c.ErrorList, err)
 	}
-}
-
-func waitCont() {
-	if len(errorList) > 0 {
-		for _, err := range errorList {
-			fmt.Println(err)
-		}
-		fmt.Println("Press the Enter Key to terminate the console screen!")
-		var input string
-		fmt.Scanln(&input)
-		os.Exit(1)
-	}
-}
-
-func checkPath(path string) (ret bool) {
-	ret = true
-	_, err := os.Stat(path)
-	if err != nil {
-		ret = false
-	}
-	return
 }
