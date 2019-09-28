@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 )
 
 type check struct {
@@ -43,10 +47,19 @@ func (c *check) Path(path string) bool {
 			if err == io.EOF {
 				break
 			}
+
 			switch record[0] {
+			case "dns":
+				if !c.DNS(record[1:]) {
+					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not resolve host '%s'", record[1]))
+				}
 			case "file":
 				if !c.Path(record[1]) {
 					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not validate path: '%s' from '%s'", record[1], path))
+				}
+			case "sock":
+				if !c.Sock(record[1:]) {
+					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not establish connection to %s socket '%s'", record[1], record[2]))
 				}
 			}
 		}
@@ -54,6 +67,36 @@ func (c *check) Path(path string) bool {
 			return false
 		}
 	}
+	return true
+}
+
+func (c *check) DNS(options []string) bool {
+	r := net.Resolver{}
+	ctx := context.Background()
+	_, err := r.LookupIPAddr(ctx, options[0])
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (c *check) Sock(options []string) bool {
+	var timeout int = 1
+
+	if len(options) > 2 {
+		i, err := strconv.Atoi(options[2])
+		if err != nil {
+			timeout = i
+		}
+	}
+
+	conn, err := net.DialTimeout(options[0], options[1], time.Duration(timeout)*time.Second)
+
+	if err != nil {
+		return false
+	}
+
+	conn.Close()
 	return true
 }
 
