@@ -30,7 +30,7 @@ func main() {
 	defer c.ShowErrors()
 
 	if !c.Path(path) {
-		c.ErrorList = append(c.ErrorList, errors.New("Could not validate specified path"))
+		c.ErrorList = append(c.ErrorList, errors.New("could not validate specified path"))
 		return
 	}
 

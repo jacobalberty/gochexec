@@ -51,15 +51,17 @@ func (c *check) Path(path string) bool {
 			switch record[0] {
 			case "dns":
 				if !c.DNS(record[1:]) {
-					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not resolve host '%s'", record[1]))
+					c.ErrorList = append(c.ErrorList, fmt.Errorf("could not resolve host '%s'", record[1]))
 				}
 			case "file":
 				if !c.Path(record[1]) {
-					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not validate path: '%s' from '%s'", record[1], path))
+					c.ErrorList = append(c.ErrorList, fmt.Errorf("could not validate path: '%s' from '%s'", record[1], path))
 				}
 			case "sock":
 				if !c.Sock(record[1:]) {
-					c.ErrorList = append(c.ErrorList, fmt.Errorf("Could not establish connection to %s socket '%s'", record[1], record[2]))
+					c.ErrorList = append(
+						c.ErrorList,
+						fmt.Errorf("could not establish connection to %s socket '%s'", record[1], record[2]))
 				}
 			}
 		}
@@ -78,7 +80,7 @@ func (c *check) DNS(options []string) bool {
 }
 
 func (c *check) Sock(options []string) bool {
-	var timeout int = 1
+	var timeout = 1
 
 	if len(options) > 2 {
 		i, err := strconv.Atoi(options[2])
