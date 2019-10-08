@@ -95,8 +95,9 @@ func (c *check) Sock(options []string) bool {
 		return false
 	}
 
-	conn.Close()
-	return true
+	err = conn.Close()
+
+	return err == nil
 }
 
 func (c *check) ShowErrors() {
@@ -106,7 +107,7 @@ func (c *check) ShowErrors() {
 		}
 		fmt.Println("Press the Enter Key to terminate the console screen!")
 		var input string
-		fmt.Scanln(&input)
+		_, _ = fmt.Scanln(&input)
 		os.Exit(1)
 	}
 }
