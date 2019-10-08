@@ -74,10 +74,7 @@ func (c *check) DNS(options []string) bool {
 	r := net.Resolver{}
 	ctx := context.Background()
 	_, err := r.LookupIPAddr(ctx, options[0])
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (c *check) Sock(options []string) bool {
