@@ -104,7 +104,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version: stable
+          go-version-file: go.mod
 
       # Builds the cross-platform binaries, then creates the GitHub release
       # with a changelog (configured in .goreleaser.yml).
